@@ -1,0 +1,158 @@
+---
+title: "Lab3"
+author: "Hugo Sparrman"
+format: html
+editor: visual
+execute: 
+  echo: false
+---
+
+```{r, message = FALSE}
+library(here)
+here::i_am("Lab3.qmd")
+```
+
+```{r, message = FALSE}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(knitr)
+library(stringr)
+```
+
+## Excercise 1
+
+```{r}
+spotify<-readRDS("Data/top-spotify-hits-2000-2019.Rds")
+```
+
+```{r}
+unique_songs<-spotify|>
+  distinct(song, artist, keep_all = TRUE)
+
+```
+
+### Question 1
+
+The data set contains: `r nrow(unique_songs)` different songs and `r nrow(unique_songs|>distinct(artist))` distinct number of artists, as well as `r nrow(spotify|>distinct(genre))` distinct number of genres.
+
+### Question 2
+
+```{r}
+artist_by_year<-spotify|>
+  group_by(year)|>
+  distinct(artist)|>
+  summarise(number_of_artists=n())
+
+knitr::kable(artist_by_year,caption = "Distinct number of artists by year",
+             col.names = c("Year","Number of Artists"))
+```
+
+### Question 3
+
+```{r}
+popular_song <-spotify|>
+  distinct(artist,song)|>
+  group_by(artist)|>
+  summarise(Number_of_songs=n())|>
+  arrange(-Number_of_songs)|>
+  slice(1)
+
+```
+
+The most popular artist in the data set is: `r popular_song$artist` with `r popular_song$Number_of_songs` number of songs in the data set.
+
+### Question 4
+
+```{r}
+genre_table <- spotify|>
+  distinct(artist,song,.keep_all = TRUE)|>
+  group_by(genre)|>
+  summarise(
+    min_tempo = min(tempo),
+    max_tempo = max(tempo),
+    mean_tempo = mean(tempo),
+    median_tempo = median(tempo),
+    number_of_songs = n_distinct(song)
+  )
+
+knitr::kable(genre_table,
+             col.names = gsub("[_]"," ",str_to_title(names(genre_table))))
+
+```
+
+### Question 5
+
+```{r}
+median_of_tings <- spotify|>
+  group_by(year)|>
+  summarise(
+    nrgy = median(liveness),
+    dnce = median(danceability)
+  )
+median_of_tings <-as.data.frame(median_of_tings)
+
+```
+
+### Question 6
+
+```{r}
+longer_median<-median_of_tings|>
+  pivot_longer(cols = c(nrgy, dnce),
+               names_to = "Variable",
+               values_to = "Median")
+
+ggplot(longer_median, aes(x = year, y = Median, color = Variable)) +
+  geom_line() +
+  labs(x = "Year", y = "Median", color = "Graphs") +
+  ggtitle("Temporal evolution of median danceability and median liveness")
+
+
+```
+
+## Excercise 2
+
+```{r}
+dropout<-readRDS("Data/dropout.Rds")
+```
+
+### Question 1
+
+```{r}
+age_at_enrollment<-dropout|>
+  group_by(`Marital status`,`Gender`)|>
+  summarise("Median age at enrollment" = median(`Age at enrollment`),.groups = "drop")
+```
+
+### Question 2
+
+```{r}
+Marital_status<-age_at_enrollment|>
+  pivot_wider(names_from = Gender, values_from = `Median age at enrollment` )
+
+knitr::kable(Marital_status, caption = "Median age of Marital situation ")
+
+```
+
+### Question 3
+
+```{r}
+mean_curricular<-dropout|>
+  group_by(Target)|>
+  summarise(across(starts_with("Curricular"),~mean(.,na.rm = T)))
+
+head(mean_curricular)
+```
+
+### Question 4
+
+```{r}
+mean_table<-mean_curricular|>
+  pivot_longer(cols = starts_with("Curricular"), names_to = "Units",
+               values_to = "Value")|>
+  pivot_wider(names_from = Target, values_from = "Value")
+
+mean_table|>
+  knitr::kable("pipe",caption = "Mean Curricular Units")
+  
+```
