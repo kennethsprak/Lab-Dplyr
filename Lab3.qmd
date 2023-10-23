@@ -83,6 +83,7 @@ knitr::kable(genre_table,
 
 ### Question 5
 
+Creation of a data frame for the median of liveness and danceability. The result here is the five first rows.
 ```{r}
 median_of_tings <- spotify|>
   group_by(year)|>
@@ -91,6 +92,8 @@ median_of_tings <- spotify|>
     dnce = median(danceability)
   )
 median_of_tings <-as.data.frame(median_of_tings)
+
+head(median_of_tings,5)
 
 ```
 
@@ -118,6 +121,7 @@ dropout<-readRDS("Data/dropout.Rds")
 
 ### Question 1
 
+We change the data frame dropout data to get conditional median age at enrollment. The output result can be seen in question 2.  
 ```{r}
 age_at_enrollment<-dropout|>
   group_by(`Marital status`,`Gender`)|>
@@ -136,12 +140,12 @@ knitr::kable(Marital_status, caption = "Median age of Marital situation ")
 
 ### Question 3
 
+Here a data frame is created of the mean for all variables related to curricular units given the value of the "Target" variable. 
 ```{r}
 mean_curricular<-dropout|>
   group_by(Target)|>
   summarise(across(starts_with("Curricular"),~mean(.,na.rm = T)))
 
-head(mean_curricular)
 ```
 
 ### Question 4
